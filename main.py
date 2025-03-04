@@ -50,7 +50,6 @@ db = {
             "name": "Math Quiz",
             "max_score": 100
         }
-
     },
     "results": [
         {
@@ -106,7 +105,7 @@ async def create_test(test: Test):
 #5
 @app.get("/tests/{test_id}", response_model=Test, tags=["tests"])
 async def get_test(test_id: int):
-    if len(db["tests"][test_id]) == 0:
+    if len(db["tests"]) == 0:
         raise HTTPException(status_code=404, detail="Test does not exist")
     if test_id not in db["tests"]:
         raise HTTPException(status_code=400, detail="Test does not exist")
@@ -130,7 +129,7 @@ async def create_result(result: TestResult):
 #8
 @app.get("/results/students/{student_id}/", response_model=List[TestResult], tags=["results"])
 async def get_result_students(student_id: int):
-    if len(db["results"][student_id]) == 0:
+    if len(db["results"]) == 0:
         raise HTTPException(status_code=404, detail="Result does not exist")
     results_of_student = []
     for i in db["results"]:
@@ -146,7 +145,7 @@ async def get_result_students(student_id: int):
 #9
 @app.get("/results/test/{test_id}/", response_model=List[TestResult], tags=["results"])
 async def get_result_test(test_id: int):
-    if len(db["results"][test_id]) == 0:
+    if len(db["results"]) == 0:
         raise HTTPException(status_code=404, detail=f"Result does not exist")
     results_of_specific_test = []
     for i in db["results"]:
@@ -160,31 +159,31 @@ async def get_result_test(test_id: int):
 @app.get("/results/test/{test_id}/average", response_model=dict[str, float], tags=["results"])
 async def get_result_average(test_id: int):
     average_score = -1
-    count_of_tests = 0
-    if test_id not in db["results"]:
-        raise HTTPException(status_code=404, detail=f"Test with ID {test_id} not found")
+    sum_of_score = 0
+    count = 0
     for i in db["results"]:
         if i["test_id"] == test_id:
-            average_score += i["score"]
-            count_of_tests += 1
-    average_score /= count_of_tests
+            sum_of_score += i["score"]
+            count += 1
+    if count != 0:
+        average_score = sum_of_score / count
     if average_score < 0:
-        raise HTTPException(status_code=404, detail=f"Test with ID {test_id} not found")
+        raise HTTPException(status_code=404, detail=f"Result does not exist")
     return {"Average score": average_score}
+
 
 
 #11
 @app.get("/results/test/{test_id}/highest", response_model=dict[str, int], tags=["results"])
 async def get_result_highest(test_id: int):
-    if test_id not in db["results"]:
-        raise HTTPException(status_code=404, detail=f"Test with ID {test_id} not found")
     highest_score = -1
     for i in db["results"]:
         if i["test_id"] == test_id:
-            highest_score = max(int(highest_score), int(i["score"]))
+            highest_score = max(highest_score, i["score"])
     if highest_score < 0:
-        raise HTTPException(status_code=404, detail=f"Test with ID {test_id} not found")
+        raise HTTPException(status_code=404, detail=f"Result does not exist")
     return {"Highest score": highest_score}
+
 
 #12
 @app.get("/students/{student_id}/", response_model=ResponseMessage, tags=["students"])
